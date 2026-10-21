@@ -33,6 +33,10 @@ jobs:
         with:
           python-version: "3.13"
       - run: python -m pip install -e ".[dev]"
+      - name: Badges in the READMEs show the current score
+        run: |
+          ossdoctor badge --update README.md --check
+          ossdoctor badge --update README.zh-CN.md --check
       - run: ruff check .
       - run: ruff format --check .
       - name: Install actionlint

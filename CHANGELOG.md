@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-21
+
 ### Added
 
+- `ossdoctor badge` prints a shields.io badge showing the score, as Markdown,
+  reStructuredText, HTML or a bare URL, in any shields.io style.
+  `--update FILE` rewrites the score of the badges already in a file, and
+  `--check` makes it fail instead when they are out of date, for use in CI.
 - `ossdoctor fix` generates a GitHub Actions CI workflow when a repository has
   none, with a job for each of Python (pip, uv or Poetry), Node.js (npm, pnpm,
   Yarn or Bun), Go, Rust and Java (Maven or the Gradle wrapper). It only runs
@@ -64,7 +70,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configuration via `.ossdoctor.toml` or `[tool.ossdoctor]` in `pyproject.toml`.
 - A GitHub Action that writes the report to the job summary.
 
-[Unreleased]: https://github.com/jalensuggs77/ossdoctor/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/jalensuggs77/ossdoctor/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/jalensuggs77/ossdoctor/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/jalensuggs77/ossdoctor/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/jalensuggs77/ossdoctor/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/jalensuggs77/ossdoctor/releases/tag/v0.1.0

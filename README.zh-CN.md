@@ -1,5 +1,7 @@
 # ossdoctor
 
+[![ossdoctor score](https://img.shields.io/badge/ossdoctor-100%2F100-brightgreen)](https://github.com/jalensuggs77/ossdoctor)
+
 [English](README.md)
 
 **开源仓库的"体检"工具。** ossdoctor 检查维护者需要的文档、社区文件和自动化配置，
@@ -38,16 +40,23 @@ ossdoctor --fail-under 80       # 分数低于 80 时以状态码 1 退出
 ossdoctor fix --dry-run         # 预览会生成哪些文件
 ossdoctor fix --license MIT --email you@example.com --github-user 你的用户名
 
+ossdoctor badge                 # 生成显示分数的 README 徽章
 ossdoctor list                  # 列出所有检查项
 ```
 
 生成的文件只是起点，提交前请检查并补充项目相关的内容。
 
+### 分数徽章
+
+`ossdoctor badge` 会输出一个显示当前分数的徽章，可以直接贴进 README。徽章只是一张图片，分数不会自己更新，
+可以用 `ossdoctor badge --update README.md` 把 README 里的分数改成最新的；
+在 CI 里加上 `--check`，徽章过时就会报错。
+
 ### GitHub Action
 
 ```yaml
 - uses: actions/checkout@v7
-- uses: jalensuggs77/ossdoctor@v0.2.1
+- uses: jalensuggs77/ossdoctor@v0.3.0
   with:
     fail-under: "80"
 ```

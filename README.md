@@ -3,6 +3,7 @@
 [![CI](https://github.com/jalensuggs77/ossdoctor/actions/workflows/ci.yml/badge.svg)](https://github.com/jalensuggs77/ossdoctor/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/ossdoctor)](https://pypi.org/project/ossdoctor/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![ossdoctor score](https://img.shields.io/badge/ossdoctor-100%2F100-brightgreen)](https://github.com/jalensuggs77/ossdoctor)
 
 [简体中文](README.zh-CN.md)
 
@@ -46,6 +47,7 @@ ossdoctor --fail-under 80       # exit 1 when the score is below 80
 ossdoctor fix --dry-run         # show which files would be generated
 ossdoctor fix --license Apache-2.0 --email security@example.com --github-user ada
 
+ossdoctor badge                 # print a README badge with the score
 ossdoctor list                  # list every check
 ```
 
@@ -83,6 +85,24 @@ on the first push if the project builds. It is still a starting point: check
 the versions and commands before committing. Ecosystems without a template are
 listed in a comment at the top of the file.
 
+### Score badge
+
+`ossdoctor badge` prints a badge for the current score, like the one at the
+top of this page:
+
+```markdown
+[![ossdoctor score](https://img.shields.io/badge/ossdoctor-100%2F100-brightgreen)](https://github.com/jalensuggs77/ossdoctor)
+```
+
+Use `--format rst`, `html` or `url` for other markups, and `--style` for any
+shields.io style. A badge is just an image URL, so it cannot update itself.
+Keep it honest with:
+
+```sh
+ossdoctor badge --update README.md          # rewrite the score in place
+ossdoctor badge --update README.md --check  # in CI: fail if the badge is stale
+```
+
 ### GitHub Action
 
 ```yaml
@@ -96,7 +116,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: jalensuggs77/ossdoctor@v0.2.1
+      - uses: jalensuggs77/ossdoctor@v0.3.0
         with:
           fail-under: "80"
 ```
@@ -119,7 +139,7 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@v7
-      - uses: jalensuggs77/ossdoctor@v0.2.1
+      - uses: jalensuggs77/ossdoctor@v0.3.0
         with:
           sarif-file: ossdoctor.sarif
       - uses: github/codeql-action/upload-sarif@v4

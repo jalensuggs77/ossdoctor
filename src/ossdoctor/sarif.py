@@ -11,12 +11,11 @@ from __future__ import annotations
 import hashlib
 import json
 
-from . import __version__
+from . import PROJECT_URL, __version__
 from .checks import Check, Finding, Level, Status
 from .runner import Report
 
 SARIF_SCHEMA = "https://json.schemastore.org/sarif-2.1.0.json"
-INFORMATION_URI = "https://github.com/jalensuggs77/ossdoctor"
 SRCROOT = "%SRCROOT%"
 
 _LEVELS = {Level.REQUIRED: "error", Level.RECOMMENDED: "warning", Level.OPTIONAL: "note"}
@@ -42,7 +41,7 @@ def _rule(check: Check) -> dict:
         "shortDescription": {"text": check.title},
         "fullDescription": {"text": check.hint},
         "help": {"text": check.hint, "markdown": markdown},
-        "helpUri": f"{INFORMATION_URI}#checks",
+        "helpUri": f"{PROJECT_URL}#checks",
         "defaultConfiguration": {"level": _LEVELS[check.level]},
         "properties": properties,
     }
@@ -98,7 +97,7 @@ def report_to_sarif(report: Report) -> dict:
                         "name": "ossdoctor",
                         "version": __version__,
                         "semanticVersion": __version__,
-                        "informationUri": INFORMATION_URI,
+                        "informationUri": PROJECT_URL,
                         "rules": [_rule(c) for c in checks],
                     }
                 },

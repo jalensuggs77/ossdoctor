@@ -8,6 +8,9 @@ import sys
 from collections.abc import Sequence
 
 from . import __version__
+from .badge import FORMATS as BADGE_FORMATS
+from .badge import STYLES as BADGE_STYLES
+from .badge import render_badge, update_badges
 from .checks import CATEGORIES, REGISTRY
 from .config import Config, ConfigError, load_config
 from .fixers import SUPPORTED_LICENSES, FixOptions, UnsafePathError, apply_plan, plan_fixes
@@ -69,6 +72,17 @@ def _build_parser() -> argparse.ArgumentParser:
     fix.add_argument("--email", help="contact address for SECURITY.md and CODE_OF_CONDUCT.md (default: git user.email)")
     fix.add_argument("--github-user", metavar="NAME", help="GitHub user or team for CODEOWNERS")
 
+    badge = sub.add_parser("badge", help="print a README badge showing the score, or update one")
+    badge.add_argument("path", nargs="?", default=".", help="repository to score (default: current directory)")
+    badge.add_argument("-f", "--format", choices=BADGE_FORMATS, default="markdown")
+    badge.add_argument("--style", choices=BADGE_STYLES, default="flat", help="shields.io badge style")
+    badge.add_argument(
+        "--update",
+        metavar="FILE",
+        help="instead of printing, set the score of the ossdoctor badges already in FILE",
+    )
+    badge.add_argument("--check", action="store_true", help="with --update: change nothing, exit 1 if FILE is out of date")
+
     sub.add_parser("list", help="list all available checks")
     return parser
 
@@ -127,6 +141,34 @@ def _cmd_fix(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def _cmd_badge(args: argparse.Namespace) -> int:
+    if args.check and not args.update:
+        raise ConfigError("--check needs --update FILE")
+    repo = Repo.load(args.path)
+    score = run_checks(repo, load_config(repo.root)).score
+    if not args.update:
+        print(render_badge(score, args.format, args.style))
+        return EXIT_OK
+
+    with open(args.update, encoding="utf-8", newline="") as fh:
+        text = fh.read()
+    new_text, count, previous = update_badges(text, score)
+    if not count:
+        raise ConfigError(f"no ossdoctor badge found in {args.update}; add the output of `ossdoctor badge` first")
+    if new_text == text:
+        print(f"{args.update}: badge is up to date ({score}/100)")
+        return EXIT_OK
+    shown = ", ".join(f"{p}/100" for p in sorted(set(previous)))
+    if args.check:
+        print(f"{args.update}: badge shows {shown} but the score is {score}/100", file=sys.stderr)
+        print(f"Run `ossdoctor badge --update {args.update}` to fix it.", file=sys.stderr)
+        return EXIT_BELOW_THRESHOLD
+    with open(args.update, "w", encoding="utf-8", newline="") as fh:
+        fh.write(new_text)
+    print(f"{args.update}: badge updated from {shown} to {score}/100")
+    return EXIT_OK
+
+
 def _cmd_list(args: argparse.Namespace) -> int:
     width = max(len(c.id) for c in REGISTRY.values())
     for category in CATEGORIES:
@@ -142,10 +184,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     parser = _build_parser()
     # `ossdoctor` and `ossdoctor PATH` behave like `ossdoctor check ...`.
-    if not argv or argv[0] not in {"check", "fix", "list", "-h", "--help", "--version"}:
+    if not argv or argv[0] not in {"check", "fix", "badge", "list", "-h", "--help", "--version"}:
         argv.insert(0, "check")
     args = parser.parse_args(argv)
-    handlers = {"check": _cmd_check, "fix": _cmd_fix, "list": _cmd_list}
+    handlers = {"check": _cmd_check, "fix": _cmd_fix, "badge": _cmd_badge, "list": _cmd_list}
     try:
         return handlers[args.command](args)
     except (ConfigError, UnsafePathError, OSError) as exc:
