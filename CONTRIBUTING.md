@@ -34,6 +34,9 @@ ruff format .
 ossdoctor          # the project must keep a score of 100
 ```
 
+If your change alters the CLI output, regenerate the README screenshots with
+`pip install rich && python scripts/make_screenshots.py`.
+
 ## Adding a check
 
 1. Add a function to `src/ossdoctor/checks.py` decorated with `@check(...)`.

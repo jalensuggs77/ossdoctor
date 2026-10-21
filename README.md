@@ -19,28 +19,9 @@ from 0 to 100, and generates whatever is missing.
   scripts, and `--fail-under` to keep a score from slipping.
 - **Zero dependencies.** Pure Python standard library.
 
-```text
-$ ossdoctor
-ossdoctor 0.1.0  /home/ada/widget
-
-Documentation
-  ✔ README                                    README.md
-  ✘ README covers install, usage and license  missing section: usage
-  ✔ License                                   LICENSE (Apache-2.0)
-  ✘ Changelog                                 no CHANGELOG found
-Community
-  ✔ Contributing guide                        CONTRIBUTING.md
-  ✘ Code of conduct                           no CODE_OF_CONDUCT file found
-  ...
-Security
-  ✘ Security policy                           no SECURITY policy found
-  ✔ No committed secrets                      none found
-  ...
-
-Score: 64/100  (10 passed, 7 failed, 1 skipped)
-Run with --verbose to see how to fix each failure.
-`ossdoctor fix` can generate files for 5 failing check(s).
-```
+<p align="center">
+  <img src="docs/images/check.svg" alt="ossdoctor reporting a score of 50/100 for a demo repository, with failing checks such as a missing changelog, security policy and a committed .env file" width="820">
+</p>
 
 ## Installation
 
@@ -69,6 +50,13 @@ ossdoctor list                  # list every check
 `git config` unless you pass `--author` and `--email`). Placeholders it cannot
 fill are reported so you can finish them by hand. Review the generated files
 before committing: they are starting points, not finished documents.
+
+<p align="center">
+  <img src="docs/images/fix.svg" alt="ossdoctor fix creating ten missing files, after which only the README license section and the committed .env file remain" width="820">
+</p>
+
+Anything that needs a human decision, such as a leaked secret or a missing
+README section, is left for you.
 
 Built-in license templates: MIT, ISC, BSD-2-Clause and BSD-3-Clause. For other
 licenses, copy the text from [choosealicense.com](https://choosealicense.com/licenses/).

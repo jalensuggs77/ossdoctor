@@ -11,6 +11,10 @@
 - **适合 CI**：支持 Markdown（用于 Job Summary）、JSON 输出和 `--fail-under` 分数门槛。
 - **零依赖**：只用 Python 标准库。
 
+<p align="center">
+  <img src="docs/images/check.svg" alt="ossdoctor 检查一个示例仓库，得分 50/100" width="820">
+</p>
+
 ## 安装
 
 ```sh
