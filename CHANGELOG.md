@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-21
+
 ### Security
 
 - `ossdoctor fix` no longer writes through symlinks. A repository containing a
@@ -52,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configuration via `.ossdoctor.toml` or `[tool.ossdoctor]` in `pyproject.toml`.
 - A GitHub Action that writes the report to the job summary.
 
-[Unreleased]: https://github.com/jalensuggs77/ossdoctor/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/jalensuggs77/ossdoctor/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/jalensuggs77/ossdoctor/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/jalensuggs77/ossdoctor/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/jalensuggs77/ossdoctor/releases/tag/v0.1.0

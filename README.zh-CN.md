@@ -45,7 +45,7 @@ ossdoctor list                  # 列出所有检查项
 
 ```yaml
 - uses: actions/checkout@v7
-- uses: jalensuggs77/ossdoctor@v0.2.0
+- uses: jalensuggs77/ossdoctor@v0.2.1
   with:
     fail-under: "80"
 ```

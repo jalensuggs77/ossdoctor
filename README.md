@@ -76,7 +76,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: jalensuggs77/ossdoctor@v0.2.0
+      - uses: jalensuggs77/ossdoctor@v0.2.1
         with:
           fail-under: "80"
 ```
@@ -99,7 +99,7 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@v7
-      - uses: jalensuggs77/ossdoctor@v0.2.0
+      - uses: jalensuggs77/ossdoctor@v0.2.1
         with:
           sarif-file: ossdoctor.sarif
       - uses: github/codeql-action/upload-sarif@v4
