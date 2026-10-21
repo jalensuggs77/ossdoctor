@@ -5,7 +5,7 @@ templates and documentation fixes are all welcome.
 
 ## Reporting bugs and requesting features
 
-Search the [existing issues](https://github.com/OWNER/ossdoctor/issues) first.
+Search the [existing issues](https://github.com/jalen/ossdoctor/issues) first.
 If nothing matches, open a new issue using one of the templates. For a false
 positive or false negative, include the file layout that triggers it (the
 output of `git ls-files` is ideal).
@@ -18,7 +18,7 @@ Please report security vulnerabilities privately as described in
 ossdoctor needs Python 3.11 or newer and has no runtime dependencies.
 
 ```sh
-git clone https://github.com/OWNER/ossdoctor
+git clone https://github.com/jalen/ossdoctor
 cd ossdoctor
 python -m venv .venv
 source .venv/bin/activate      # Windows: .venv\Scripts\activate

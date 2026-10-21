@@ -21,5 +21,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configuration via `.ossdoctor.toml` or `[tool.ossdoctor]` in `pyproject.toml`.
 - A GitHub Action that writes the report to the job summary.
 
-[Unreleased]: https://github.com/OWNER/ossdoctor/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/OWNER/ossdoctor/releases/tag/v0.1.0
+[Unreleased]: https://github.com/jalen/ossdoctor/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/jalen/ossdoctor/releases/tag/v0.1.0
