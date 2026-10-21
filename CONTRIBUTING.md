@@ -62,7 +62,9 @@ Checks must be fast, must work offline and must never modify the repository.
 ## Releasing (maintainers)
 
 1. Update `__version__` in `src/ossdoctor/__init__.py` and move the
-   `[Unreleased]` notes in `CHANGELOG.md` under the new version.
+   `[Unreleased]` notes in `CHANGELOG.md` under the new version. Check that
+   the action, Python, Node.js and pnpm versions at the top of
+   `src/ossdoctor/ci.py` are still current.
 2. Commit and push to `main`.
 3. On GitHub, draft a new release with a new tag such as `v0.2.0` on `main`,
    paste the changelog notes, set the release label to **Latest** and publish

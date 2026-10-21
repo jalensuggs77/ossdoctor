@@ -13,8 +13,9 @@ from 0 to 100, and generates whatever is missing.
 - **Fast and offline.** It reads only the working tree, never calls an API and
   needs no token, so it runs the same locally, in CI and on forks.
 - **Fixes, not just findings.** `ossdoctor fix` writes a sensible LICENSE,
-  CONTRIBUTING guide, security policy, issue forms, Dependabot config and more,
-  tailored to the ecosystems it detects. It never overwrites an existing file.
+  CONTRIBUTING guide, security policy, issue forms, Dependabot config, a CI
+  workflow and more, tailored to the ecosystems it detects. It never
+  overwrites an existing file.
 - **Built for CI.** Markdown output for job summaries and PR comments, SARIF
   for GitHub code scanning, JSON for scripts, and `--fail-under` to keep a
   score from slipping.
@@ -62,6 +63,25 @@ README section, is left for you.
 
 Built-in license templates: MIT, ISC, BSD-2-Clause and BSD-3-Clause. For other
 licenses, copy the text from [choosealicense.com](https://choosealicense.com/licenses/).
+
+### Generated CI workflows
+
+When a repository has no CI at all, `fix` writes `.github/workflows/ci.yml`
+with one job per ecosystem it finds:
+
+| Ecosystem | How it is installed | What runs |
+|---|---|---|
+| Python | uv (`uv.lock`), Poetry (`poetry.lock`) or pip, with a `test`/`dev` extra if declared | pytest, if there are tests, across the versions allowed by `requires-python` |
+| Node.js | npm, pnpm, Yarn or Bun, chosen by lockfile | the `lint`, `build` and `test` scripts that exist, on the Node.js LTS lines |
+| Go | `setup-go` with the version from `go.mod` | `go build`, `go vet`, `go test` |
+| Rust | the runner's stable toolchain | `cargo build`, `cargo test` |
+| Java | Maven or the Gradle wrapper, Temurin 21 | `mvn verify` or `./gradlew build` |
+
+The workflow runs on pushes to the default branch and on pull requests, with a
+read-only token. It only calls scripts and tests that exist, so it should pass
+on the first push if the project builds. It is still a starting point: check
+the versions and commands before committing. Ecosystems without a template are
+listed in a comment at the top of the file.
 
 ### GitHub Action
 

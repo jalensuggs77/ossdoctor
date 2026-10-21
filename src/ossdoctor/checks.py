@@ -382,8 +382,10 @@ CI_FILES = (
     "Continuous integration",
     "Automation",
     Level.REQUIRED,
-    "Run tests on every push and pull request, e.g. with a GitHub Actions workflow in .github/workflows/.",
+    "Run tests on every push and pull request. `ossdoctor fix` generates a GitHub Actions workflow "
+    "for Python, Node.js, Go, Rust and Java projects.",
     location=".github/workflows",
+    fixable=True,
 )
 def check_ci(repo: Repo, config: Config) -> Outcome:
     workflows = repo.matching(lambda f: f.lower().startswith(".github/workflows/") and f.lower().endswith((".yml", ".yaml")))
@@ -413,7 +415,7 @@ TEST_FILE_PATTERNS = (
 )
 
 
-def _is_test_file(path: str) -> bool:
+def is_test_file(path: str) -> bool:
     p = PurePosixPath(path)
     if any(part.lower() in TEST_DIRS for part in p.parts[:-1]):
         return True
@@ -429,7 +431,7 @@ def _is_test_file(path: str) -> bool:
     location="tests",
 )
 def check_tests(repo: Repo, config: Config) -> Outcome:
-    tests = repo.matching(_is_test_file)
+    tests = repo.matching(is_test_file)
     if tests:
         return passed(f"{len(tests)} test file(s)")
     if repo.find("Cargo.toml") and any(f.endswith(".rs") for f in repo.files):

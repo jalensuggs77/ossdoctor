@@ -7,7 +7,9 @@
 
 - **快速、离线**：只读取工作区文件，不调用任何 API，不需要 token。
 - **不只报问题，还能修**：`ossdoctor fix` 根据检测到的技术栈生成 LICENSE、
-  贡献指南、安全策略、Issue 表单、Dependabot 配置等，绝不覆盖已有文件。
+  贡献指南、安全策略、Issue 表单、Dependabot 配置、CI 工作流等，绝不覆盖已有文件。
+  CI 工作流支持 Python（pip/uv/Poetry）、Node.js（npm/pnpm/Yarn/Bun）、Go、Rust 和 Java（Maven/Gradle），
+  只调用项目里真实存在的脚本和测试。
 - **适合 CI**：支持 Markdown（用于 Job Summary）、SARIF（用于 GitHub 代码扫描）、JSON 输出和 `--fail-under` 分数门槛。
 - **零依赖**：只用 Python 标准库。
 

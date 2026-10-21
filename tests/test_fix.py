@@ -30,7 +30,8 @@ def test_fix_creates_files_and_raises_score(make_repo, capsys):
     report = run_checks(Repo.load(root), load_config(root))
     still_failing = {r.check.id for r in report.by_status(Status.FAIL)}
     # Only checks that need real work from the maintainer remain.
-    assert still_failing == {"ci", "tests"}
+    assert still_failing == {"tests"}
+    assert (root / ".github/workflows/ci.yml").is_file()
     assert report.score > before
 
 

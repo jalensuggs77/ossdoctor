@@ -24,7 +24,7 @@ dynamic = ["version"]
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "ruff>=0.6"]
+dev = ["pytest>=8", "ruff>=0.6", "pyyaml>=6"]
 
 [project.urls]
 Homepage = "https://github.com/jalensuggs77/ossdoctor"

@@ -11,6 +11,7 @@ from pathlib import Path, PurePosixPath
 from string import Template
 
 from . import templates
+from .ci import NoTemplate, generate_workflow
 from .repo import Repo
 from .runner import Report
 
@@ -142,6 +143,14 @@ def _issue_templates(repo, opts, ctx):
     if not repo.find(".github/ISSUE_TEMPLATE/config.yml", ".github/ISSUE_TEMPLATE/config.yaml"):
         files[".github/ISSUE_TEMPLATE/config.yml"] = templates.ISSUE_CONFIG
     return files
+
+
+@fixer("ci")
+def _ci(repo, opts, ctx):
+    try:
+        return {".github/workflows/ci.yml": generate_workflow(repo)}
+    except NoTemplate as exc:
+        raise FixSkipped(str(exc)) from exc
 
 
 @fixer("pr-template")

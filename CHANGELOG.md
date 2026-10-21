@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `ossdoctor fix` generates a GitHub Actions CI workflow when a repository has
+  none, with a job for each of Python (pip, uv or Poetry), Node.js (npm, pnpm,
+  Yarn or Bun), Go, Rust and Java (Maven or the Gradle wrapper). It only runs
+  scripts and tests that exist, picks the Python matrix from
+  `requires-python`, runs on the repository's default branch and uses a
+  read-only token.
+- CI lints ossdoctor's own workflows and the generated ones with actionlint.
+
 ## [0.2.1] - 2026-10-21
 
 ### Security
