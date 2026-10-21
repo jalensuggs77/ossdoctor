@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import fnmatch
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import PurePosixPath
@@ -38,17 +38,28 @@ CATEGORIES = ("Documentation", "Community", "Automation", "Security", "Hygiene")
 
 
 @dataclass(frozen=True)
+class Finding:
+    """One problem tied to one file, for reports that point at files (SARIF)."""
+
+    path: str
+    message: str
+
+
+@dataclass(frozen=True)
 class Outcome:
     status: Status
     detail: str = ""
+    # Per-file problems behind a failure. Empty when the problem is that a
+    # file is missing; reporters then point at the check's ``location``.
+    findings: tuple[Finding, ...] = ()
 
 
 def passed(detail: str = "") -> Outcome:
     return Outcome(Status.PASS, detail)
 
 
-def failed(detail: str = "") -> Outcome:
-    return Outcome(Status.FAIL, detail)
+def failed(detail: str = "", findings: Iterable[Finding] = ()) -> Outcome:
+    return Outcome(Status.FAIL, detail, tuple(findings))
 
 
 def skipped(detail: str = "") -> Outcome:
@@ -66,19 +77,21 @@ class Check:
     level: Level
     hint: str
     fixable: bool
+    location: str
     run: CheckFunc
 
 
 REGISTRY: dict[str, Check] = {}
 
 
-def check(id: str, title: str, category: str, level: Level, hint: str, fixable: bool = False):
+def check(id: str, title: str, category: str, level: Level, hint: str, *, location: str, fixable: bool = False):
+    """Register a check. ``location`` is where the file it looks for belongs."""
     assert category in CATEGORIES, category
 
     def register(func: CheckFunc) -> CheckFunc:
         if id in REGISTRY:
             raise ValueError(f"duplicate check id: {id}")
-        REGISTRY[id] = Check(id, title, category, level, hint, fixable, func)
+        REGISTRY[id] = Check(id, title, category, level, hint, fixable, location, func)
         return func
 
     return register
@@ -102,13 +115,14 @@ def find_readme(repo: Repo) -> str | None:
     Level.REQUIRED,
     "A README is the front door of the project: say what it does, how to install it and how to use it.",
     fixable=True,
+    location="README.md",
 )
 def check_readme(repo: Repo, config: Config) -> Outcome:
     readme = find_readme(repo)
     if not readme:
         return failed("no README found")
     if len(repo.read_text(readme).strip()) < 200:
-        return failed(f"{readme} is nearly empty")
+        return failed(f"{readme} is nearly empty", [Finding(readme, f"{readme} is nearly empty")])
     return passed(readme)
 
 
@@ -168,6 +182,7 @@ def _headings(text: str) -> list[str]:
     "Documentation",
     Level.RECOMMENDED,
     "Add headings for installation, usage and license so newcomers find answers without reading the source.",
+    location="README.md",
 )
 def check_readme_sections(repo: Repo, config: Config) -> Outcome:
     readme = find_readme(repo)
@@ -176,7 +191,8 @@ def check_readme_sections(repo: Repo, config: Config) -> Outcome:
     headings = " | ".join(_headings(repo.read_text(readme))).lower()
     missing = [name for name, words in README_SECTIONS.items() if not any(w in headings for w in words)]
     if missing:
-        return failed("missing section: " + ", ".join(missing))
+        detail = "missing section: " + ", ".join(missing)
+        return failed(detail, [Finding(readme, f"{readme} is {detail}")])
     return passed("all sections present")
 
 
@@ -226,6 +242,7 @@ def identify_license(text: str) -> str | None:
     Level.REQUIRED,
     "Without a license nobody may legally use, change or share the code. See https://choosealicense.com.",
     fixable=True,
+    location="LICENSE",
 )
 def check_license(repo: Repo, config: Config) -> Outcome:
     found = repo.find(*LICENSE_NAMES)
@@ -242,6 +259,7 @@ def check_license(repo: Repo, config: Config) -> Outcome:
     Level.RECOMMENDED,
     "Keep a CHANGELOG so users can see what changed between releases. See https://keepachangelog.com.",
     fixable=True,
+    location="CHANGELOG.md",
 )
 def check_changelog(repo: Repo, config: Config) -> Outcome:
     names = ("CHANGELOG", "CHANGES", "HISTORY", "NEWS", "RELEASES")
@@ -265,6 +283,7 @@ def check_changelog(repo: Repo, config: Config) -> Outcome:
     Level.RECOMMENDED,
     "A CONTRIBUTING guide explains how to set up the project, run tests and submit changes.",
     fixable=True,
+    location="CONTRIBUTING.md",
 )
 def check_contributing(repo: Repo, config: Config) -> Outcome:
     found = repo.find_community("CONTRIBUTING.md", "CONTRIBUTING.rst", "CONTRIBUTING.txt", "CONTRIBUTING")
@@ -278,6 +297,7 @@ def check_contributing(repo: Repo, config: Config) -> Outcome:
     Level.RECOMMENDED,
     "A code of conduct sets expectations for behaviour and tells people how to report problems.",
     fixable=True,
+    location="CODE_OF_CONDUCT.md",
 )
 def check_code_of_conduct(repo: Repo, config: Config) -> Outcome:
     found = repo.find_community("CODE_OF_CONDUCT.md", "CODE_OF_CONDUCT.rst", "CODE_OF_CONDUCT.txt", "CODE_OF_CONDUCT")
@@ -291,6 +311,7 @@ def check_code_of_conduct(repo: Repo, config: Config) -> Outcome:
     Level.RECOMMENDED,
     "Issue templates collect versions, reproduction steps and expected behaviour up front, which shortens triage.",
     fixable=True,
+    location=".github/ISSUE_TEMPLATE",
 )
 def check_issue_templates(repo: Repo, config: Config) -> Outcome:
     templates = repo.matching(
@@ -313,6 +334,7 @@ def check_issue_templates(repo: Repo, config: Config) -> Outcome:
     Level.OPTIONAL,
     "A pull request template reminds contributors to describe the change, link issues and add tests.",
     fixable=True,
+    location=".github/pull_request_template.md",
 )
 def check_pr_template(repo: Repo, config: Config) -> Outcome:
     found = repo.find_community("pull_request_template.md", "PULL_REQUEST_TEMPLATE.md")
@@ -330,6 +352,7 @@ def check_pr_template(repo: Repo, config: Config) -> Outcome:
     Level.OPTIONAL,
     "CODEOWNERS requests reviews from the right maintainers automatically. Generate one with `ossdoctor fix --github-user NAME`.",
     fixable=True,
+    location=".github/CODEOWNERS",
 )
 def check_codeowners(repo: Repo, config: Config) -> Outcome:
     found = repo.find("CODEOWNERS", ".github/CODEOWNERS", "docs/CODEOWNERS", ".gitlab/CODEOWNERS")
@@ -360,6 +383,7 @@ CI_FILES = (
     "Automation",
     Level.REQUIRED,
     "Run tests on every push and pull request, e.g. with a GitHub Actions workflow in .github/workflows/.",
+    location=".github/workflows",
 )
 def check_ci(repo: Repo, config: Config) -> Outcome:
     workflows = repo.matching(lambda f: f.lower().startswith(".github/workflows/") and f.lower().endswith((".yml", ".yaml")))
@@ -402,6 +426,7 @@ def _is_test_file(path: str) -> bool:
     "Automation",
     Level.REQUIRED,
     "Tests let you merge contributions with confidence. Add a tests/ directory and run it in CI.",
+    location="tests",
 )
 def check_tests(repo: Repo, config: Config) -> Outcome:
     tests = repo.matching(_is_test_file)
@@ -427,6 +452,7 @@ def check_tests(repo: Repo, config: Config) -> Outcome:
     Level.RECOMMENDED,
     "SECURITY.md tells researchers how to report vulnerabilities privately instead of opening public issues.",
     fixable=True,
+    location="SECURITY.md",
 )
 def check_security_policy(repo: Repo, config: Config) -> Outcome:
     found = repo.find_community("SECURITY.md", "SECURITY.rst", "SECURITY.txt", "SECURITY")
@@ -440,6 +466,7 @@ def check_security_policy(repo: Repo, config: Config) -> Outcome:
     Level.RECOMMENDED,
     "Dependabot or Renovate keeps dependencies patched without manual work.",
     fixable=True,
+    location=".github/dependabot.yml",
 )
 def check_dependency_updates(repo: Repo, config: Config) -> Outcome:
     found = repo.find(
@@ -467,25 +494,30 @@ NODE_LOCKFILES = ("package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "pnpm
     "Security",
     Level.RECOMMENDED,
     "Commit the lockfile so CI and contributors install exactly the dependency versions you tested.",
+    location="package.json",
 )
 def check_lockfile(repo: Repo, config: Config) -> Outcome:
-    results = []
+    results = []  # (ecosystem, manifest, lockfile or None)
     opted_out = []
-    if repo.find("package.json"):
+    package_json = repo.find("package.json")
+    if package_json:
         npmrc = repo.find(".npmrc")
         if npmrc and _NO_LOCKFILE.search(repo.read_text(npmrc)):
             opted_out.append(f"npm (disabled in {npmrc})")
         else:
-            results.append(("npm", repo.find(*NODE_LOCKFILES)))
+            results.append(("npm", package_json, repo.find(*NODE_LOCKFILES)))
     gomod = repo.find("go.mod")
     if gomod and re.search(r"^\s*require\b", repo.read_text(gomod), re.MULTILINE):
-        results.append(("Go", repo.find("go.sum")))
+        results.append(("Go", gomod, repo.find("go.sum")))
     if not results:
         return skipped("lockfile not used: " + ", ".join(opted_out) if opted_out else "no ecosystem that needs a lockfile")
-    missing = [eco for eco, lock in results if not lock]
+    missing = [(eco, manifest) for eco, manifest, lock in results if not lock]
     if missing:
-        return failed("missing lockfile for " + ", ".join(missing))
-    return passed(", ".join(lock for _, lock in results if lock))
+        return failed(
+            "missing lockfile for " + ", ".join(eco for eco, _ in missing),
+            [Finding(manifest, f"{manifest} has no committed {eco} lockfile") for eco, manifest in missing],
+        )
+    return passed(", ".join(lock for _, _, lock in results if lock))
 
 
 SECRET_FILE_NAMES = {"id_rsa", "id_dsa", "id_ecdsa", "id_ed25519", ".npmrc.auth", "credentials.json", ".pypirc", ".netrc"}
@@ -511,12 +543,16 @@ def _looks_secret(repo: Repo, path: str) -> bool:
     Level.REQUIRED,
     "Remove credentials from the repository, rotate them, and add the files to .gitignore. "
     "Deleting a file does not remove it from git history.",
+    location=".gitignore",
 )
 def check_no_secret_files(repo: Repo, config: Config) -> Outcome:
     hits = [f for f in repo.files if not any(fnmatch.fnmatch(f, pat) for pat in config.ignore_paths) and _looks_secret(repo, f)]
     if hits:
         shown = ", ".join(hits[:5]) + (f" and {len(hits) - 5} more" if len(hits) > 5 else "")
-        return failed(f"possible secrets: {shown}")
+        return failed(
+            f"possible secrets: {shown}",
+            [Finding(f, f"{f} looks like a secret and should not be committed") for f in hits],
+        )
     return passed("none found")
 
 
@@ -532,6 +568,7 @@ def check_no_secret_files(repo: Repo, config: Config) -> Outcome:
     Level.RECOMMENDED,
     "A .gitignore keeps build output, caches and local settings out of commits.",
     fixable=True,
+    location=".gitignore",
 )
 def check_gitignore(repo: Repo, config: Config) -> Outcome:
     found = repo.find(".gitignore")
@@ -545,6 +582,7 @@ def check_gitignore(repo: Repo, config: Config) -> Outcome:
     Level.OPTIONAL,
     "An .editorconfig keeps indentation and line endings consistent across contributors' editors.",
     fixable=True,
+    location=".editorconfig",
 )
 def check_editorconfig(repo: Repo, config: Config) -> Outcome:
     found = repo.find(".editorconfig")
@@ -557,6 +595,7 @@ def check_editorconfig(repo: Repo, config: Config) -> Outcome:
     "Hygiene",
     Level.RECOMMENDED,
     "Large binaries bloat every clone. Move them to releases or Git LFS. The limit is set with `large-file-mb`.",
+    location=".gitattributes",
 )
 def check_no_large_files(repo: Repo, config: Config) -> Outcome:
     limit = int(config.large_file_mb * 1024 * 1024)
@@ -568,5 +607,8 @@ def check_no_large_files(repo: Repo, config: Config) -> Outcome:
     if big:
         big.sort(key=lambda item: -item[1])
         shown = ", ".join(f"{f} ({size / 1024 / 1024:.1f} MB)" for f, size in big[:5])
-        return failed(f"over {config.large_file_mb:g} MB: {shown}")
+        return failed(
+            f"over {config.large_file_mb:g} MB: {shown}",
+            [Finding(f, f"{f} is {size / 1024 / 1024:.1f} MB (limit {config.large_file_mb:g} MB)") for f, size in big],
+        )
     return passed(f"all files under {config.large_file_mb:g} MB")

@@ -15,11 +15,17 @@ inputs:
   python-version:
     description: Python version used to run ossdoctor.
     default: "3.12"
+  sarif-file:
+    description: Also write a SARIF report to this path, for upload with github/codeql-action/upload-sarif.
+    default: ""
 
 outputs:
   score:
     description: The health score from 0 to 100.
     value: ${{ steps.run.outputs.score }}
+  sarif-file:
+    description: Path of the SARIF report, if one was requested.
+    value: ${{ steps.run.outputs.sarif-file }}
 
 runs:
   using: composite
@@ -36,7 +42,12 @@ runs:
       env:
         INPUT_PATH: ${{ inputs.path }}
         INPUT_FAIL_UNDER: ${{ inputs.fail-under }}
+        INPUT_SARIF_FILE: ${{ inputs.sarif-file }}
       run: |
+        if [ -n "$INPUT_SARIF_FILE" ]; then
+          ossdoctor check "$INPUT_PATH" --fail-under 0 --format sarif --output "$INPUT_SARIF_FILE"
+          echo "sarif-file=$INPUT_SARIF_FILE" >> "$GITHUB_OUTPUT"
+        fi
         ossdoctor check "$INPUT_PATH" --fail-under 0 --format markdown >> "$GITHUB_STEP_SUMMARY"
         score=$(ossdoctor check "$INPUT_PATH" --fail-under 0 --format json | python -c 'import json, sys; print(json.load(sys.stdin)["score"])')
         echo "score=$score" >> "$GITHUB_OUTPUT"

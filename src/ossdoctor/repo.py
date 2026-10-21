@@ -117,6 +117,27 @@ class Repo:
         return (self.root / rel).stat().st_size
 
     @cached_property
+    def git_toplevel(self) -> Path | None:
+        """The root of the enclosing git work tree, which may be above ``root``."""
+        if not self.is_git:
+            return None
+        try:
+            proc = subprocess.run(
+                ["git", "-C", str(self.root), "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True
+            )
+        except (OSError, subprocess.CalledProcessError):
+            return None
+        return Path(proc.stdout.strip()).resolve()
+
+    @property
+    def path_in_git(self) -> str:
+        """``root`` relative to the git work tree as a ``dir/`` prefix, or ``""``."""
+        top = self.git_toplevel
+        if top is None or top == self.root:
+            return ""
+        return self.root.relative_to(top).as_posix() + "/"
+
+    @cached_property
     def ecosystems(self) -> set[str]:
         """Package ecosystems at the repository root, named as Dependabot names them."""
         markers = {

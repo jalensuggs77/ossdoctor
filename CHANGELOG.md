@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-21
+
+### Added
+
+- `--format sarif` writes a SARIF 2.1.0 report for GitHub code scanning and
+  other SARIF viewers. Failures tied to a file (committed secrets, large
+  files, README sections, lockfiles) are reported on that file; missing files
+  are reported on the path where they belong. Security checks carry a
+  `security-severity`.
+- `--output FILE` writes the report to a file instead of standard output.
+- The GitHub Action takes a `sarif-file` input and exposes it as an output.
+
+### Changed
+
+- The release workflow now runs when a GitHub release is published and
+  attaches the built distributions to it.
+
 ## [0.1.0] - 2026-10-21
 
 ### Added
@@ -21,5 +38,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configuration via `.ossdoctor.toml` or `[tool.ossdoctor]` in `pyproject.toml`.
 - A GitHub Action that writes the report to the job summary.
 
-[Unreleased]: https://github.com/jalensuggs77/ossdoctor/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/jalensuggs77/ossdoctor/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/jalensuggs77/ossdoctor/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/jalensuggs77/ossdoctor/releases/tag/v0.1.0

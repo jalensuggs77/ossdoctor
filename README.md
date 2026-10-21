@@ -15,8 +15,9 @@ from 0 to 100, and generates whatever is missing.
 - **Fixes, not just findings.** `ossdoctor fix` writes a sensible LICENSE,
   CONTRIBUTING guide, security policy, issue forms, Dependabot config and more,
   tailored to the ecosystems it detects. It never overwrites an existing file.
-- **Built for CI.** Markdown output for job summaries and PR comments, JSON for
-  scripts, and `--fail-under` to keep a score from slipping.
+- **Built for CI.** Markdown output for job summaries and PR comments, SARIF
+  for GitHub code scanning, JSON for scripts, and `--fail-under` to keep a
+  score from slipping.
 - **Zero dependencies.** Pure Python standard library.
 
 <p align="center">
@@ -38,6 +39,7 @@ ossdoctor                       # check the current directory
 ossdoctor path/to/repo -v       # explain how to fix each failure
 ossdoctor --format markdown     # report as a Markdown table
 ossdoctor --format json         # machine-readable output
+ossdoctor -f sarif -o ossdoctor.sarif   # SARIF 2.1.0 for code scanning
 ossdoctor --fail-under 80       # exit 1 when the score is below 80
 
 ossdoctor fix --dry-run         # show which files would be generated
@@ -74,13 +76,46 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: jalensuggs77/ossdoctor@v0.1.0
+      - uses: jalensuggs77/ossdoctor@v0.2.0
         with:
           fail-under: "80"
 ```
 
 The report is added to the job summary and the score is available as
 `steps.<id>.outputs.score`.
+
+### GitHub code scanning
+
+With `sarif-file`, the Action also writes a SARIF report. Upload it and every
+failing check shows up under **Security → Code scanning**, with the fix
+explained on the alert and new problems flagged on pull requests:
+
+```yaml
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: jalensuggs77/ossdoctor@v0.2.0
+        with:
+          sarif-file: ossdoctor.sarif
+      - uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: ossdoctor.sarif
+          category: ossdoctor
+```
+
+Required checks are reported as errors, recommended ones as warnings and
+optional ones as notes. Security checks also carry a `security-severity`, so
+GitHub ranks them as high, medium or low. Problems with a specific file (a
+committed `.env`, a large binary, an incomplete README) are reported on that
+file. A missing file is reported on the path where it belongs, such as
+`SECURITY.md`. Paths are relative to the git repository root, so running
+ossdoctor on a subdirectory of a monorepo works too.
 
 ## Checks
 
@@ -138,7 +173,6 @@ ignore-paths = ["tests/fixtures/*"]        # globs excluded from file scans
 
 ## Roadmap
 
-- SARIF output for GitHub code scanning
 - Checks for release hygiene (tags, signed releases) and branch protection, using an optional token
 - More license templates and templates in other languages
 - Package manager metadata checks (repository URL, license field, keywords)

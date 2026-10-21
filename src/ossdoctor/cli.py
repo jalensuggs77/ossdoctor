@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import sys
 from collections.abc import Sequence
 
@@ -13,6 +14,7 @@ from .fixers import SUPPORTED_LICENSES, FixOptions, apply_plan, plan_fixes
 from .repo import Repo
 from .report import render_json, render_markdown, render_text
 from .runner import run_checks
+from .sarif import render_sarif
 
 EXIT_OK = 0
 EXIT_BELOW_THRESHOLD = 1
@@ -38,7 +40,14 @@ def _build_parser() -> argparse.ArgumentParser:
 
     check = sub.add_parser("check", help="report on the repository (default command)")
     add_common(check)
-    check.add_argument("-f", "--format", choices=("text", "markdown", "json"), default="text")
+    check.add_argument(
+        "-f",
+        "--format",
+        choices=("text", "markdown", "json", "sarif"),
+        default="text",
+        help="output format; sarif is for GitHub code scanning (default: text)",
+    )
+    check.add_argument("-o", "--output", metavar="FILE", help="write the report to FILE instead of standard output")
     check.add_argument("-v", "--verbose", action="store_true", help="explain how to fix each failure")
     check.add_argument(
         "--fail-under",
@@ -77,12 +86,16 @@ def _prepare(args: argparse.Namespace) -> tuple[Repo, Config]:
 def _cmd_check(args: argparse.Namespace) -> int:
     repo, config = _prepare(args)
     report = run_checks(repo, config, only=args.only)
-    if args.format == "json":
-        sys.stdout.write(render_json(report))
-    elif args.format == "markdown":
-        sys.stdout.write(render_markdown(report))
-    else:
-        sys.stdout.write(render_text(report, sys.stdout, verbose=args.verbose))
+    target = open(args.output, "w", encoding="utf-8", newline="\n") if args.output else contextlib.nullcontext(sys.stdout)
+    with target as out:
+        if args.format == "json":
+            out.write(render_json(report))
+        elif args.format == "markdown":
+            out.write(render_markdown(report))
+        elif args.format == "sarif":
+            out.write(render_sarif(report))
+        else:
+            out.write(render_text(report, out, verbose=args.verbose))
 
     threshold = args.fail_under if args.fail_under is not None else config.fail_under
     if threshold is not None and report.score < threshold:
@@ -135,7 +148,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     handlers = {"check": _cmd_check, "fix": _cmd_fix, "list": _cmd_list}
     try:
         return handlers[args.command](args)
-    except (ConfigError, NotADirectoryError) as exc:
+    except (ConfigError, OSError) as exc:
         print(f"ossdoctor: error: {exc}", file=sys.stderr)
         return EXIT_USAGE
 
