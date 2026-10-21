@@ -60,9 +60,12 @@ Checks must be fast, must work offline and must never modify the repository.
 
 1. Update `__version__` in `src/ossdoctor/__init__.py` and move the
    `[Unreleased]` notes in `CHANGELOG.md` under the new version.
-2. Commit, then tag and push: `git tag v0.2.0 && git push origin v0.2.0`.
-3. The release workflow builds the package, publishes it to PyPI through
-   trusted publishing and creates the GitHub release.
+2. Commit and push to `main`.
+3. On GitHub, draft a new release with a new tag such as `v0.2.0` on `main`,
+   paste the changelog notes and publish it.
+4. The release workflow checks that the tag matches the package version,
+   publishes the package to PyPI through trusted publishing and attaches the
+   built files to the release.
 
 ## Code of conduct
 
