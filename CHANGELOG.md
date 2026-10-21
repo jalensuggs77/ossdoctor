@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- `ossdoctor fix` no longer writes through symlinks. A repository containing a
+  link such as `.github -> /elsewhere` could previously make `fix` create files
+  outside the repository. Any symlink on the path of a generated file is now
+  refused and reported, all paths are checked before anything is written, and
+  they are checked again just before each write.
+
+### Fixed
+
+- A dangling symlink is no longer counted as an existing file when the
+  repository is not a git checkout, matching the behaviour inside one. It also
+  no longer makes `fix` stop halfway with `File exists`.
+
 ## [0.2.0] - 2026-10-21
 
 ### Added

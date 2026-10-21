@@ -57,7 +57,9 @@ def _walk_files(root: Path) -> list[str]:
         dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
         rel = Path(dirpath).relative_to(root)
         for name in filenames:
-            found.append((rel / name).as_posix())
+            # Same rule as the git listing: a dangling symlink is not a file.
+            if (Path(dirpath) / name).is_file():
+                found.append((rel / name).as_posix())
     return found
 
 

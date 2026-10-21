@@ -10,7 +10,7 @@ from collections.abc import Sequence
 from . import __version__
 from .checks import CATEGORIES, REGISTRY
 from .config import Config, ConfigError, load_config
-from .fixers import SUPPORTED_LICENSES, FixOptions, apply_plan, plan_fixes
+from .fixers import SUPPORTED_LICENSES, FixOptions, UnsafePathError, apply_plan, plan_fixes
 from .repo import Repo
 from .report import render_json, render_markdown, render_text
 from .runner import run_checks
@@ -148,7 +148,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     handlers = {"check": _cmd_check, "fix": _cmd_fix, "list": _cmd_list}
     try:
         return handlers[args.command](args)
-    except (ConfigError, OSError) as exc:
+    except (ConfigError, UnsafePathError, OSError) as exc:
         print(f"ossdoctor: error: {exc}", file=sys.stderr)
         return EXIT_USAGE
 

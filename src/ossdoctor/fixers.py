@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import datetime as _dt
+import os
 import subprocess
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from string import Template
 
 from . import templates
@@ -20,6 +21,36 @@ SUPPORTED_LICENSES = tuple(templates.LICENSES)
 
 class FixSkipped(Exception):
     """Raised by a fixer that cannot generate its file with the given options."""
+
+
+class UnsafePathError(Exception):
+    """Raised when writing a generated file would leave the repository or follow a symlink."""
+
+
+def unsafe_reason(root: Path, rel: str) -> str | None:
+    """Explain why ``rel`` cannot be created under ``root``, or return ``None`` if it can.
+
+    Generated files are only ever written through real directories. A symlink
+    anywhere on the path, including a dangling one at the end, is refused: a
+    cloned repository may contain a link such as ``.github -> /somewhere/else``,
+    and following it would write outside the repository.
+    """
+    parts = PurePosixPath(rel).parts
+    if PurePosixPath(rel).is_absolute() or not parts or ".." in parts:
+        return "path is not relative to the repository"
+    real_root = root.resolve()
+    current = root
+    for i, part in enumerate(parts):
+        current = current / part
+        if not os.path.lexists(current):
+            return None  # nothing deeper can exist either
+        shown = "/".join(parts[: i + 1])
+        if current.is_symlink():
+            return f"{shown} is a symlink"
+        # Catches what is_symlink() misses, such as Windows junctions.
+        if not current.resolve().is_relative_to(real_root):
+            return f"{shown} resolves outside the repository"
+    return None
 
 
 def git_config(root: Path, key: str) -> str | None:
@@ -175,7 +206,12 @@ def plan_fixes(repo: Repo, report: Report, opts: FixOptions) -> FixPlan:
             plan.skipped[result.check.id] = str(exc)
             continue
         for path, body in generated.items():
-            if (repo.root / path).exists():
+            reason = unsafe_reason(repo.root, path)
+            if reason:
+                plan.skipped.setdefault(result.check.id, f"not creating {path}: {reason}")
+                continue
+            # lexists, not exists: a dangling symlink "does not exist" but is still in the way.
+            if os.path.lexists(repo.root / path):
                 plan.skipped.setdefault(result.check.id, f"{path} already exists")
                 continue
             plan.files[path] = Template(body).safe_substitute(ctx)
@@ -188,8 +224,19 @@ def plan_fixes(repo: Repo, report: Report, opts: FixOptions) -> FixPlan:
     return plan
 
 
+def _require_safe(root: Path, rel: str) -> None:
+    reason = unsafe_reason(root, rel)
+    if reason:
+        raise UnsafePathError(f"refusing to create {rel}: {reason}")
+
+
 def apply_plan(root: Path, plan: FixPlan) -> None:
+    # Check everything before writing anything, so a refusal leaves no half-applied fix.
+    for rel in plan.files:
+        _require_safe(root, rel)
     for rel, body in plan.files.items():
+        # The repository may have changed since planning, so look again just before writing.
+        _require_safe(root, rel)
         target = root / rel
         target.parent.mkdir(parents=True, exist_ok=True)
         # "x" mode refuses to overwrite a file that appeared after planning.
