@@ -36,10 +36,11 @@ jobs:
       - run: ruff check .
       - run: ruff format --check .
       - name: Install actionlint
-        run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+        run: |
+          go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
       - name: Lint workflows, including the ones ossdoctor generates
         run: |
-          export PATH="$(go env GOPATH)/bin:$PATH"
           actionlint
           python -m pytest tests/test_ci.py -k actionlint -v
 
