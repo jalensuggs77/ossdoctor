@@ -1,0 +1,45 @@
+name: ossdoctor
+description: Check that a repository has the docs, community files and automation open source maintainers rely on.
+author: ossdoctor contributors
+branding:
+  icon: activity
+  color: green
+
+inputs:
+  path:
+    description: Directory to check, relative to the workspace.
+    default: "."
+  fail-under:
+    description: Fail the step when the score is below this value (0-100). Defaults to the repository's config.
+    default: ""
+  python-version:
+    description: Python version used to run ossdoctor.
+    default: "3.12"
+
+outputs:
+  score:
+    description: The health score from 0 to 100.
+    value: ${{ steps.run.outputs.score }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+    - name: Install ossdoctor
+      shell: bash
+      run: python -m pip install --disable-pip-version-check --quiet "$GITHUB_ACTION_PATH"
+    - name: Run ossdoctor
+      id: run
+      shell: bash
+      env:
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_FAIL_UNDER: ${{ inputs.fail-under }}
+      run: |
+        ossdoctor check "$INPUT_PATH" --fail-under 0 --format markdown >> "$GITHUB_STEP_SUMMARY"
+        score=$(ossdoctor check "$INPUT_PATH" --fail-under 0 --format json | python -c 'import json, sys; print(json.load(sys.stdin)["score"])')
+        echo "score=$score" >> "$GITHUB_OUTPUT"
+        args=()
+        if [ -n "$INPUT_FAIL_UNDER" ]; then args+=(--fail-under "$INPUT_FAIL_UNDER"); fi
+        ossdoctor check "$INPUT_PATH" --verbose "${args[@]}"
