@@ -27,9 +27,9 @@ dependencies = []
 dev = ["pytest>=8", "ruff>=0.6"]
 
 [project.urls]
-Homepage = "https://github.com/jalen/ossdoctor"
-Issues = "https://github.com/jalen/ossdoctor/issues"
-Changelog = "https://github.com/jalen/ossdoctor/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/jalensuggs77/ossdoctor"
+Issues = "https://github.com/jalensuggs77/ossdoctor/issues"
+Changelog = "https://github.com/jalensuggs77/ossdoctor/blob/main/CHANGELOG.md"
 
 [project.scripts]
 ossdoctor = "ossdoctor.cli:main"

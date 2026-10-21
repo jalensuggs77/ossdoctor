@@ -1,6 +1,6 @@
 # ossdoctor
 
-[![CI](https://github.com/jalen/ossdoctor/actions/workflows/ci.yml/badge.svg)](https://github.com/jalen/ossdoctor/actions/workflows/ci.yml)
+[![CI](https://github.com/jalensuggs77/ossdoctor/actions/workflows/ci.yml/badge.svg)](https://github.com/jalensuggs77/ossdoctor/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/ossdoctor)](https://pypi.org/project/ossdoctor/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
@@ -86,7 +86,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: jalen/ossdoctor@v0.1.0
+      - uses: jalensuggs77/ossdoctor@v0.1.0
         with:
           fail-under: "80"
 ```
