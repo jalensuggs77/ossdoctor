@@ -65,7 +65,9 @@ Checks must be fast, must work offline and must never modify the repository.
    `[Unreleased]` notes in `CHANGELOG.md` under the new version.
 2. Commit and push to `main`.
 3. On GitHub, draft a new release with a new tag such as `v0.2.0` on `main`,
-   paste the changelog notes and publish it.
+   paste the changelog notes, set the release label to **Latest** and publish
+   it. (With the label left at "None", GitHub keeps showing the previous
+   version as the latest release.)
 4. The release workflow checks that the tag matches the package version,
    publishes the package to PyPI through trusted publishing and attaches the
    built files to the release.
