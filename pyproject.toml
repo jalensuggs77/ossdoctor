@@ -9,7 +9,7 @@ readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.11"
-authors = [{ name = "ossdoctor contributors" }]
+authors = [{ name = "jalensuggs77", email = "aufirst77@gmail.com" }]
 keywords = ["open source", "maintainers", "repository", "linter", "community health", "github"]
 classifiers = [
     "Development Status :: 4 - Beta",

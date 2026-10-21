@@ -11,7 +11,7 @@ before reporting an issue.
 
 Report vulnerabilities privately using GitHub's
 [private vulnerability reporting](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability)
-("Report a vulnerability" on the Security tab), or by email to [INSERT CONTACT EMAIL].
+("Report a vulnerability" on the Security tab), or by email to aufirst77@gmail.com.
 
 Please include a description of the issue, steps to reproduce it, the affected
 versions and any known workarounds. You should receive a reply within 7 days.

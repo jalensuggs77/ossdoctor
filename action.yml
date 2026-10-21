@@ -1,6 +1,6 @@
 name: ossdoctor
 description: Check that a repository has the docs, community files and automation open source maintainers rely on.
-author: ossdoctor contributors
+author: jalensuggs77
 branding:
   icon: activity
   color: green
